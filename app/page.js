@@ -17,7 +17,7 @@ export default function Login() {
     try {
       console.log(data);
       const response = await axios.post('http://localhost:8080/api/auth/login', data)
-      console.log(response.data);
+
       localStorage.setItem('token', response.data.accessToken)
       localStorage.setItem('userInfo', JSON.stringify(response.data.userInfo))
       router.push('/home')

@@ -15,36 +15,55 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          router.push('/login')
-          return
-        }
-
-        const overviewResponse = await axios.get('http://localhost:8080/api/transactions/overview', {
-          headers: { authorization: `Bearer ${token}` }
-        })
-        setOverviewData(overviewResponse.data)
-
-        const trxDetail = await axios.get('http://localhost:8080/api/transactions', {
-          headers: { authorization: `Bearer ${token}` },
-          params: {
-            page: currentPage,
-            limit: 10,
-            status: ''
-          }
-        })
-        setTransactions(trxDetail.data.transactions)
-        setTotalPages(trxDetail.data.totalPages)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
     fetchData()
-  }, [router, currentPage])
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      const overviewResponse = await axios.get('http://localhost:8080/api/transactions/overview', {
+        headers: { authorization: `Bearer ${token}` }
+      })
+      setOverviewData(overviewResponse.data)
+
+      const trxDetail = await axios.get('http://localhost:8080/api/transactions', {
+        headers: { authorization: `Bearer ${token}` },
+        params: {
+          page: currentPage,
+          limit: 10,
+          status: ''
+        }
+      })
+      setTransactions(trxDetail.data.transactions)
+      setTotalPages(trxDetail.data.totalPages)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+  }
+
+  const updateTrx = async (refId, action) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      const payload = { action }
+
+      const overviewResponse = await axios.post(`http://localhost:8080/api/transactions/${refId}/audit`, payload, {
+        headers: { authorization: `Bearer ${token}` }
+      })
+      fetchData()
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+  }
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage)
@@ -126,9 +145,13 @@ export default function Home() {
                 <td className="p-2 border">{currency(transaction.total_amount)}</td>
                 <td className="p-2 border">{transaction.total_records}</td>
                 <td className="p-2 border">{transaction.from_account_no}</td>
-                <td className="p-2 border">{transaction.name}</td>
+                <td className="p-2 border">{transaction.name} {transaction.status}</td>
                 <td className="p-2 border">{new Date(transaction.transfer_date).toLocaleString('id-ID', {year: 'numeric',month: '2-digit',day: '2-digit',}) || "N/A"}</td>
                 <td className="p-2 border sticky right-0">
+                  {(transaction.status == 'Awaiting Approval') && 
+                    <><p className="cursor-pointer text-green-400 font-bold" onClick={() => updateTrx(transaction.reference_no, 'Approve')}>Approve</p>
+                    <p className="cursor-pointer text-red-400 font-bold" onClick={() => updateTrx(transaction.reference_no, 'Reject')}>Reject</p></>
+                  }
                   <p className="cursor-pointer text-yellow-400 font-bold" onClick={() => handleRowClick(transaction)}>Detail</p>
                 </td>
               </tr>

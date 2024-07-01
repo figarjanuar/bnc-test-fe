@@ -43,7 +43,7 @@ export default function Resigter() {
       console.log(data);
       const response = await axios.post('http://localhost:8080/api/auth/register', data)
       localStorage.setItem('token', response.data.accessToken)
-      localStorage.setItem('userInfo', response.data.userInfo)
+      localStorage.setItem('userInfo', JSON.stringify(response.data.userInfo))
       router.push('/home')
     } catch (error) {
       let errorMessage = 'Fail to Register'
